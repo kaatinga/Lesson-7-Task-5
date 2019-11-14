@@ -2,54 +2,55 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"net/http"
+	"runtime"
+	"strconv"
 	"strings"
+	"sync"
+
+	"math/rand"
 
 	"time"
 )
 
-var startTime time.Time
+var carNumber = 5
+var responses = make(chan string, carNumber)
 
 func main() {
-
-	for {
-		startTime = time.Now()
-		fmt.Println(mirroredQuery(startTime))
-		time.Sleep(2000 * time.Millisecond)
-	}
+	wg := &sync.WaitGroup{}
+	fmt.Println(mirroredQuery(wg))
+	wg.Wait()
 }
 
-func mirroredQuery(startTime time.Time) string {
+func mirroredQuery(wg *sync.WaitGroup) string {
+	for i := 1; i < carNumber+1; i++ {
+		car := i
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			addCar(time.Duration(rand.Intn(5))*time.Second, car, wg)
+		}(wg)
+	}
 
-	responses := make(chan string, 3)
-	go func() {
-		responses <- request("http://mail.ru", startTime)
-	}()
-	go func() {
-		responses <- request("http://google.ru", startTime)
-	}()
-	go func() {
-		responses <- request("http://www.ru", startTime)
-	}()
-
-	tmpString := <-responses // возврат самого быстрого ответа
-
-	return tmpString
+	winner := <-responses // возврат самого быстрого ответа
+	return winner
 }
 
-func request(hostname string, startTime time.Time) string {
+func addCar(delay time.Duration, carNumber int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	speed := rand.Intn(15)+135 // Км в час
+	fmt.Println("Car", carNumber, "has speed:", speed)
+	fmt.Println("Задержка старта...", delay)
+	time.Sleep(delay)
 
+	passed := 0
 
-	client := http.Client{}
-	response, err := client.Get(hostname)
-	if err != nil {
-		log.Println(err)
-		return "Error!"
+	for i := 0; ; i++ {
+		time.Sleep(time.Second)
+		passed = passed + speed
+		if passed > 1500 {
+			break
+		}
 	}
-	defer response.Body.Close()
 
-	timeDifference := time.Now().Sub(startTime)
-
-	return strings.Join([]string{hostname, response.Status, timeDifference.String()}, " - ")
+	responses <- strings.Join([]string{"the car ", " finished first!"}, strconv.Itoa(carNumber))
+	runtime.Gosched()
 }
