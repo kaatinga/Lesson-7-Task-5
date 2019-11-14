@@ -36,10 +36,11 @@ func mirroredQuery(wg *sync.WaitGroup) string {
 
 func addCar(delay time.Duration, carNumber int, wg *sync.WaitGroup) {
 	defer wg.Done()
-	speed := rand.Intn(15)+135 // Км в час
-	fmt.Println("Car", carNumber, "has speed:", speed)
 	fmt.Println("Задержка старта...", delay)
 	time.Sleep(delay)
+	speed := rand.Intn(40)+110 // Км в час
+	fmt.Println("Car", carNumber, "has speed:", speed)
+
 
 	passed := 0
 
