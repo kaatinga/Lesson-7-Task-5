@@ -35,23 +35,23 @@ func mirroredQuery(wg *sync.WaitGroup) string {
 }
 
 func addCar(delay time.Duration, carNumber int, wg *sync.WaitGroup) {
+	speed := rand.Intn(40)+110 // Км в час
+	fmt.Println("Car", carNumber, "has speed:", speed)
 	defer wg.Done()
 	fmt.Println("Задержка старта...", delay)
 	time.Sleep(delay)
-	speed := rand.Intn(40)+110 // Км в час
-	fmt.Println("Car", carNumber, "has speed:", speed)
-
 
 	passed := 0
 
 	for i := 0; ; i++ {
-		time.Sleep(time.Second)
+		time.Sleep(250*time.Millisecond)
 		passed = passed + speed
-		if passed > 1500 {
+		if passed > 6000 {
+			fmt.Println("The car", carNumber, " finished!")
 			break
 		}
 	}
 
-	responses <- strings.Join([]string{"the car ", " finished first!"}, strconv.Itoa(carNumber))
+	responses <- strings.Join([]string{"the car ", " won!"}, strconv.Itoa(carNumber))
 	runtime.Gosched()
 }
